@@ -1,0 +1,20 @@
+#[cfg(feature = "core")]
+pub mod core;
+
+#[cfg(feature = "std")]
+pub mod std;
+
+pub trait TBytes {
+    fn size(&self) -> usize;
+
+    fn to_bytes(&self) -> Vec<u8>;
+
+    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    where
+        Self: Sized;
+}
+
+pub mod prelude {
+    pub use super::TBytes;
+    pub use derive::*;
+}
