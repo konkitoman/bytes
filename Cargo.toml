@@ -16,4 +16,4 @@ core = []
 std = []
 
 [dependencies]
-derive = {path = "derive"}
+derive = {version = "0.1.0", path = "derive"}
