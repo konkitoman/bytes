@@ -15,8 +15,8 @@ pub trait TBytes {
 }
 
 #[macro_use]
-extern crate derive;
-pub use derive::*;
+pub extern crate bytes_kman_derive;
+pub use bytes_kman_derive::Bytes;
 
 pub mod prelude {
     pub use super::Bytes;

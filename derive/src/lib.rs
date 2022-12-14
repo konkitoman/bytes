@@ -31,7 +31,7 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                     }
 
                     fn from_bytes(bytes: &mut Vec<u8>) -> Option<Self>{
-                        #(let #names = #types::from_bytes(bytes)?;)*
+                        #(let #names = <#types>::from_bytes(bytes)?;)*
                         Some(Self{
                             #(#names),*
                         })
@@ -69,7 +69,7 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                     if let Some(ident) = field.ident.clone() {
                         braket = true;
                         f.push(quote!(
-                           #ident : #ty::from_bytes(bytes)?
+                           #ident : <#ty>::from_bytes(bytes)?
                         ));
                         t.push(quote!(
                             #ident.to_bytes()
@@ -77,7 +77,7 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                         tt.push(quote!(#ident))
                     } else {
                         f.push(quote!(
-                           #ty::from_bytes(bytes)?
+                           <#ty>::from_bytes(bytes)?
                         ));
                         let vii = format_ident!("v{}", ii);
                         t.push(quote!(#vii.to_bytes()));
