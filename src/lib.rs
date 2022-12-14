@@ -14,6 +14,9 @@ pub trait TBytes {
         Self: Sized;
 }
 
+#[macro_use]
+extern crate derive;
+
 pub mod prelude {
     pub use super::TBytes;
     pub use derive::*;
