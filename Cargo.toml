@@ -1,6 +1,6 @@
 [package]
 name = "bytes-kman"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "serialize and deserialize bytes, a simple way to comunicate to other computer or to save state!"
 author = "konkitoman"
@@ -16,4 +16,4 @@ core = []
 std = []
 
 [dependencies]
-bytes-kman-derive = {version = "0.1.1", path = "derive"}
+bytes-kman-derive = {version = "0.1.2", path = "derive"}

@@ -41,8 +41,13 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
             .into()
         }
         syn::Data::Enum(e) => {
+            // [0, 1, 2]
+            // how many variants enum has
             let mut idxs = Vec::new();
+            // [Auth, Id]
+            // variants
             let mut idents = Vec::new();
+            // what fields variant has
             let mut fields = Vec::new();
 
             for (i, variant) in e.variants.iter().enumerate() {
@@ -51,66 +56,77 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                 fields.push(variant.fields.clone());
             }
 
-            let mut froms_fb = Vec::new();
-            let mut froms_tb = Vec::new();
-            let mut matchs_tb = Vec::new();
+            // [Self::Auth { id: <u16>::from_bytes(bytes)?] } or
+            // [Self::Auth(<u16>::from_bytes(bytes)? )]
+            let mut variant_from = Vec::new();
+
+            // [self.id.to_bytes()] or [self.0.to_bytes()]
+            let mut variant_to = Vec::new();
+            // [Self::Auth{id}, Self::AuthRes{accepted}] or {Self::Auth(v0), Self::AuthRes(v0)}
+            let mut variants = Vec::new();
+            // [id.size()] or [v0.size()]
+            // [id.size() + response.size()] or [v0.size() + v1.size()]
+            let mut variant_size = Vec::new();
 
             for i in 0..idents.len() {
                 let ident = idents[i].clone();
                 let fields = fields[i].clone();
 
-                let mut f = Vec::new();
-                let mut t = Vec::new();
-                let mut tt = Vec::new();
+                // [id : <u16>::from_bytes()?] or [<u16>::from_bytes()?]
+                let mut variant_init_vars = Vec::new();
+                //  [id] or [v0]
+                let mut variant_vars = Vec::new();
 
-                let mut braket = false;
+                let mut is_object = false;
                 for (ii, field) in fields.iter().enumerate() {
                     let ty = field.ty.clone();
                     if let Some(ident) = field.ident.clone() {
-                        braket = true;
-                        f.push(quote!(
+                        is_object = true;
+                        variant_init_vars.push(quote!(
                            #ident : <#ty>::from_bytes(bytes)?
                         ));
-                        t.push(quote!(
-                            #ident.to_bytes()
+                        variant_vars.push(quote!(
+                            #ident
                         ));
-                        tt.push(quote!(#ident))
                     } else {
-                        f.push(quote!(
+                        variant_init_vars.push(quote!(
                            <#ty>::from_bytes(bytes)?
                         ));
                         let vii = format_ident!("v{}", ii);
-                        t.push(quote!(#vii.to_bytes()));
-                        tt.push(quote!(#vii))
+                        variant_vars.push(quote!(#vii));
                     }
                 }
-                if t.len() > 0 {
-                    if braket {
-                        matchs_tb.push(quote!(#ident{#(#tt),*}));
+                if variant_vars.len() > 0 {
+                    if is_object {
+                        variants.push(quote!(#ident{#(#variant_vars),*}));
                     } else {
-                        matchs_tb.push(quote!(#ident(#(#tt),*)));
+                        variants.push(quote!(#ident(#(#variant_vars),*)));
                     }
-                    froms_tb.push(quote! {
-                        #(buffer.append(&mut #t);)*
+                    variant_to.push(quote! {
+                        #(buffer.append(&mut #variant_vars.to_bytes());)*
+                    });
+                    variant_size.push(quote! {
+                        #(#variant_vars.size())+*
                     });
                 } else {
-                    matchs_tb.push(quote! {
+                    variants.push(quote! {
                         #ident
                     });
-                    froms_tb.push(quote! {});
+                    variant_to.push(quote! {});
+                    variant_size.push(quote! {0});
                 }
-                if f.len() > 0 {
-                    if braket {
-                        froms_fb.push(quote! {
-                            #ident{#(#f),*}
+                if variant_init_vars.len() > 0 {
+                    if is_object {
+                        variant_from.push(quote! {
+                            #ident{#(#variant_init_vars),*}
                         });
                     } else {
-                        froms_fb.push(quote! {
-                            #ident(#(#f),*)
+                        variant_from.push(quote! {
+                            #ident(#(#variant_init_vars),*)
                         });
                     }
                 } else {
-                    froms_fb.push(quote! {
+                    variant_from.push(quote! {
                         #ident
                     });
                 }
@@ -120,7 +136,7 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                 impl TBytes for #ident{
                     fn size(&self) -> usize{
                         match self{
-                            #(#idents => 0),*
+                            #(Self::#variants => #variant_size),*
                         }
                     }
 
@@ -128,7 +144,7 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                         let mut buffer = Vec::new();
 
                         match self{
-                            #(Self::#matchs_tb => {buffer.append(&mut #idxs.to_bytes()); #froms_tb}),*
+                            #(Self::#variants => {buffer.append(&mut #idxs.to_bytes()); #variant_to}),*
                         };
 
                         buffer
@@ -138,7 +154,7 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                         let id = usize::from_bytes(bytes)?;
 
                         match id{
-                            #(#idxs => Some(Self::#froms_fb),)*
+                            #(#idxs => Some(Self::#variant_from),)*
                             _=> None
                         }
                     }
