@@ -1,5 +1,7 @@
 # Bytes
 
+[![Crates.io](https://img.shields.io/crates/v/bytes-kman.svg)](https://crates.io/crates/bytes-kman)
+
 ## is used for serialize and deserialize
 
     is useful because is more faster and smaller then json!
