@@ -7,6 +7,23 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(input as DeriveInput);
 
     let ident = input.ident;
+    let generics = input.generics;
+
+    let mut gen_where = quote!();
+
+    {
+        let mut gen = Vec::new();
+        for generig in generics.type_params() {
+            gen.push(quote!(#generig: TBytes))
+        }
+
+        if !gen.is_empty() {
+            gen_where = quote! {
+                where #(#gen),*
+            }
+        }
+    }
+
     match input.data {
         syn::Data::Struct(s) => {
             let mut names = Vec::with_capacity(s.fields.len());
@@ -17,7 +34,7 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                 types.push(field.ty);
             }
             quote! {
-                impl TBytes for #ident{
+                impl #generics TBytes for #ident #generics #gen_where{
                     fn size(&self) -> usize{
                         #(self.#names.size())+*
                     }
@@ -133,7 +150,7 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
             }
 
             quote! {
-                impl TBytes for #ident{
+                impl #generics TBytes for #ident #generics #gen_where{
                     fn size(&self) -> usize{
                         match self{
                             #(Self::#variants => #variant_size),*

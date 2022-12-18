@@ -1,10 +1,11 @@
 [package]
 name = "bytes-kman-derive"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 author = "konkitoman"
 keywords = ["bytes-kman"]
 license = "GPL-3.0"
+repository = "https://github.com/konkitoman/bytes"
 description = "macros for bytes-kman"
 
 [lib]

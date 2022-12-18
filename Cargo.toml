@@ -17,4 +17,4 @@ core = []
 std = []
 
 [dependencies]
-bytes-kman-derive = {version = "0.1.2", path = "derive"}
+bytes-kman-derive = {version = "0.1.3", path = "derive"}
