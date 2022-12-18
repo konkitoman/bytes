@@ -1,10 +1,11 @@
 [package]
 name = "bytes-kman"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2021"
 description = "serialize and deserialize bytes, a simple way to comunicate to other computer or to save state!"
 author = "konkitoman"
 license = "GPL-3.0"
+repository = "https://github.com/konkitoman/bytes"
 keywords = ["serialize", "deserialize", "bytes"]
 
 [workspace]
