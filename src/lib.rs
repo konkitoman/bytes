@@ -12,6 +12,15 @@ pub trait TBytes {
     fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
     where
         Self: Sized;
+
+    fn from_bytes_ref(buffer: &[u8]) -> Option<Self>
+    where
+        Self: Sized,
+    {
+        let mut buffer = buffer.to_vec();
+        buffer.reverse();
+        Self::from_bytes(&mut buffer)
+    }
 }
 
 #[macro_use]
