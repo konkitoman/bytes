@@ -30,32 +30,66 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
             let mut types = Vec::with_capacity(s.fields.len());
 
             for field in s.fields {
-                names.push(field.ident);
+                if let Some(ident) = field.ident {
+                    names.push(ident);
+                }
+
                 types.push(field.ty);
             }
-            quote! {
-                impl #generics TBytes for #ident #generics #gen_where{
-                    fn size(&self) -> usize{
-                        #(self.#names.size())+*
-                    }
+            if !names.is_empty() {
+                quote! {
+                    impl #generics TBytes for #ident #generics #gen_where{
+                        fn size(&self) -> usize{
+                            #(self.#names.size())+*
+                        }
 
-                    fn to_bytes(&self) -> Vec<u8>{
-                        let mut buffer = Vec::with_capacity(self.size());
+                        fn to_bytes(&self) -> Vec<u8>{
+                            let mut buffer = Vec::with_capacity(self.size());
 
-                        #(buffer.append(&mut self.#names.to_bytes());)*
+                            #(buffer.append(&mut self.#names.to_bytes());)*
 
-                        buffer
-                    }
+                            buffer
+                        }
 
-                    fn from_bytes(bytes: &mut Vec<u8>) -> Option<Self>{
-                        #(let #names = <#types>::from_bytes(bytes)?;)*
-                        Some(Self{
-                            #(#names),*
-                        })
+                            fn from_bytes(bytes: &mut Vec<u8>) -> Option<Self>{
+                                #(let #names = <#types>::from_bytes(bytes)?;)*
+                                Some(Self{
+                                    #(#names),*
+                                })
+                            }
                     }
                 }
+                .into()
+            } else {
+                let nums = (0usize..types.len()).collect::<Vec<usize>>();
+                let names = nums
+                    .iter()
+                    .map(|n| format_ident!("v{}", n))
+                    .collect::<Vec<proc_macro2::Ident>>();
+                quote! {
+                    impl #generics TBytes for #ident #generics #gen_where{
+                        fn size(&self) -> usize{
+                            #(self.#nums.size())+*
+                        }
+
+                        fn to_bytes(&self) -> Vec<u8>{
+                            let mut buffer = Vec::with_capacity(self.size());
+
+                            #(buffer.append(&mut self.#nums.to_bytes());)*
+
+                            buffer
+                        }
+
+                        fn from_bytes(bytes: &mut Vec<u8>) -> Option<Self>{
+                            #(let #names = <#types>::from_bytes(bytes)?;)*
+                            Some(Self(
+                                #(#names),*
+                            ))
+                        }
+                    }
+                }
+                .into()
             }
-            .into()
         }
         syn::Data::Enum(e) => {
             // [0, 1, 2]
