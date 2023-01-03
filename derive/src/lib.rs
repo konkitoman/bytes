@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::DeriveInput;
+use syn::{DeriveInput, Index};
 
 #[proc_macro_derive(Bytes)]
 pub fn derive_bytes(input: TokenStream) -> TokenStream {
@@ -61,7 +61,9 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                 }
                 .into()
             } else {
-                let nums = (0usize..types.len()).collect::<Vec<usize>>();
+                let nums = (0usize..types.len())
+                    .map(Index::from)
+                    .collect::<Vec<Index>>();
                 let names = nums
                     .iter()
                     .map(|n| format_ident!("v{}", n))
