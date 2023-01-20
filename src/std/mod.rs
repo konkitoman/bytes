@@ -2,6 +2,8 @@ pub mod arc;
 pub mod r#box;
 pub mod collections;
 pub mod mutex;
+pub mod os_str;
+pub mod path;
 pub mod rc;
 pub mod rwlock;
 pub mod string;
