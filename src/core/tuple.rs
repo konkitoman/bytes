@@ -37,3 +37,34 @@ impl_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12; 0, 1, 2, 3, 4, 5,
 impl_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
 impl_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
 impl_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14);
+
+#[cfg(test)]
+mod test {
+    use crate::TBytes;
+
+    #[test]
+    fn i32_i64() {
+        let a = (1i32, 53i64);
+
+        let mut bytes = a.to_bytes();
+        bytes.reverse();
+
+        let b = <(i32, i64)>::from_bytes(&mut bytes).unwrap();
+
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn result_i32_i64() {
+        type R = Result<(i32, i64), ()>;
+
+        let a: R = Ok((42i32, 21i64));
+
+        let mut bytes = a.to_bytes();
+        bytes.reverse();
+
+        let b = R::from_bytes(&mut bytes).unwrap();
+
+        assert_eq!(a, b);
+    }
+}

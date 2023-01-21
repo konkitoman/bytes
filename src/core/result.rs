@@ -38,3 +38,20 @@ impl<T: TBytes, E: TBytes> TBytes for Result<T, E> {
         }
     }
 }
+
+impl TBytes for () {
+    fn size(&self) -> usize {
+        0
+    }
+
+    fn to_bytes(&self) -> Vec<u8> {
+        vec![]
+    }
+
+    fn from_bytes(_buffer: &mut Vec<u8>) -> Option<Self>
+    where
+        Self: Sized,
+    {
+        Some(())
+    }
+}
