@@ -4,6 +4,7 @@ pub mod num;
 pub mod option;
 pub mod primitive;
 pub mod result;
+pub mod tuple;
 
 impl<T: TBytes, const LEN: usize> TBytes for [T; LEN] {
     fn size(&self) -> usize {
