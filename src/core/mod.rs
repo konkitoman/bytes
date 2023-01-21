@@ -3,6 +3,7 @@ use crate::TBytes;
 pub mod num;
 pub mod option;
 pub mod primitive;
+pub mod result;
 
 impl<T: TBytes, const LEN: usize> TBytes for [T; LEN] {
     fn size(&self) -> usize {
@@ -67,9 +68,9 @@ mod test {
     #[test]
     fn slice_string() {
         let a = [
-            format!("Hello World!"),
-            format!("This is working???"),
-            format!("Is working as is supposed!"),
+            "Hello World!".to_string(),
+            "This is working???".into(),
+            "Is working as is supposed!".into(),
         ];
 
         let mut bytes = a.to_bytes();

@@ -149,7 +149,7 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                         variant_vars.push(quote!(#vii));
                     }
                 }
-                if variant_vars.len() > 0 {
+                if !variant_vars.is_empty() {
                     if is_object {
                         variants.push(quote!(#ident{#(#variant_vars),*}));
                     } else {
@@ -168,7 +168,7 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                     variant_to.push(quote! {});
                     variant_size.push(quote! {0});
                 }
-                if variant_init_vars.len() > 0 {
+                if !variant_init_vars.is_empty() {
                     if is_object {
                         variant_from.push(quote! {
                             #ident{#(#variant_init_vars),*}
