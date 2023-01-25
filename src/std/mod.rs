@@ -2,6 +2,7 @@ pub mod arc;
 pub mod r#box;
 pub mod collections;
 pub mod mutex;
+pub mod ops;
 pub mod os_str;
 pub mod path;
 pub mod rc;
