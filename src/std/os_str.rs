@@ -1,8 +1,8 @@
-// use std::os::unix::prelude::{OsStrExt, OsStringExt};
 use std::ffi::OsString;
 
 use crate::TBytes;
 
+// TODO: Should work the same on linux and windows
 impl TBytes for std::ffi::OsString {
     fn size(&self) -> usize {
         (self.len() * if cfg!(target_os = "windows") { 2 } else { 1 }) + 0usize.size()
