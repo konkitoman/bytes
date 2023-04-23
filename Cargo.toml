@@ -1,6 +1,6 @@
 [package]
 name = "bytes-kman"
-version = "0.1.19"
+version = "0.1.20"
 edition = "2021"
 description = "serialize and deserialize bytes, a simple way to comunicate to other computer or to save state!"
 authors = ["konkitoman"]
