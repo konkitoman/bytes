@@ -2,10 +2,10 @@ use std::ffi::OsString;
 
 use crate::TBytes;
 
-// TODO: Should work the same on linux and windows
+// TODO: Should fix on linux utf16 characters will be ignored
 impl TBytes for std::ffi::OsString {
     fn size(&self) -> usize {
-        (self.len() * if cfg!(target_os = "windows") { 2 } else { 1 }) + 0usize.size()
+        self.len() * 2 + 0usize.size()
     }
 
     fn to_bytes(&self) -> Vec<u8> {
@@ -18,7 +18,10 @@ impl TBytes for std::ffi::OsString {
 
         #[cfg(target_os = "linux")]
         for byte in self.as_bytes() {
-            buffer.push(*byte)
+            {
+                buffer.push(*byte);
+                buffer.push(0);
+            }
         }
         #[cfg(target_os = "windows")]
         for byte in self.encode_wide() {
@@ -36,7 +39,10 @@ impl TBytes for std::ffi::OsString {
         let mut buff = Vec::with_capacity(len);
         for _ in 0..len {
             #[cfg(target_os = "linux")]
-            buff.push(buffer.pop()?);
+            {
+                buff.push(buffer.pop()?);
+                buffer.pop();
+            }
             #[cfg(target_os = "windows")]
             buff.push(u16::from_bytes(buffer)?);
         }
