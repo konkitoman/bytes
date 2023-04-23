@@ -55,8 +55,6 @@ impl TBytes for std::ffi::OsString {
         return Some(OsString::from_vec(buff));
         #[cfg(target_os = "windows")]
         return Some(OsString::from_wide(&buff));
-
-        None
     }
 }
 
