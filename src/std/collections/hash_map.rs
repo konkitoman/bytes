@@ -1,6 +1,6 @@
 use ::std::collections::hash_map::HashMap;
 
-use crate::TBytes;
+use crate::{TBuffer, TBytes};
 
 impl<T, A> TBytes for HashMap<T, A>
 where
@@ -31,7 +31,7 @@ where
         buffer
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
@@ -61,9 +61,8 @@ mod test {
         a.insert("Content-Length".to_string(), "21".to_string());
 
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let other = <HashMap<String, String>>::from_bytes(&mut bytes).unwrap();
+        let other = <HashMap<String, String>>::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(a, other)
     }

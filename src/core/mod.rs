@@ -1,4 +1,4 @@
-use crate::TBytes;
+use crate::{TBuffer, TBytes};
 
 pub mod num;
 pub mod option;
@@ -25,7 +25,7 @@ impl<T: TBytes, const LEN: usize> TBytes for [T; LEN] {
         buffer
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
@@ -59,9 +59,8 @@ mod test {
         let a = [32, 543, 61, 21215, -4236, 32];
 
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let other = <[i32; 6]>::from_bytes(&mut bytes).unwrap();
+        let other = <[i32; 6]>::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(a, other);
     }
@@ -75,9 +74,8 @@ mod test {
         ];
 
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let other = <[String; 3]>::from_bytes(&mut bytes).unwrap();
+        let other = <[String; 3]>::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(a, other);
     }

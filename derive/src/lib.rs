@@ -51,12 +51,12 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                             buffer
                         }
 
-                            fn from_bytes(bytes: &mut Vec<u8>) -> Option<Self>{
-                                #(let #names = <#types>::from_bytes(bytes)?;)*
-                                Some(Self{
-                                    #(#names),*
-                                })
-                            }
+                        fn from_bytes(bytes: &mut TBuffer) -> Option<Self>{
+                            #(let #names = <#types>::from_bytes(bytes)?;)*
+                            Some(Self{
+                                #(#names),*
+                            })
+                        }
                     }
                 }
                 .into()
@@ -82,7 +82,7 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                             buffer
                         }
 
-                        fn from_bytes(bytes: &mut Vec<u8>) -> Option<Self>{
+                        fn from_bytes(bytes: &mut TBuffer) -> Option<Self>{
                             #(let #names = <#types>::from_bytes(bytes)?;)*
                             Some(Self(
                                 #(#names),*
@@ -203,7 +203,7 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                         buffer
                     }
 
-                    fn from_bytes(bytes: &mut Vec<u8>) -> Option<Self>{
+                    fn from_bytes(bytes: &mut TBuffer) -> Option<Self>{
                         let id = usize::from_bytes(bytes)?;
 
                         match id{

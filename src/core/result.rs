@@ -1,4 +1,4 @@
-use crate::TBytes;
+use crate::{TBuffer, TBytes};
 
 impl<T: TBytes, E: TBytes> TBytes for Result<T, E> {
     fn size(&self) -> usize {
@@ -25,11 +25,11 @@ impl<T: TBytes, E: TBytes> TBytes for Result<T, E> {
         buffer
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
-        let variant = buffer.pop()?;
+        let variant = buffer.next()?;
 
         match variant {
             0 => Some(Ok(T::from_bytes(buffer)?)),
@@ -48,7 +48,7 @@ impl TBytes for () {
         vec![]
     }
 
-    fn from_bytes(_buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(_buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {

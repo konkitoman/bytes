@@ -4,12 +4,14 @@ pub mod core;
 #[cfg(feature = "std")]
 pub mod std;
 
+pub type TBuffer<'a> = dyn Iterator<Item = u8> + 'a;
+
 pub trait TBytes {
     fn size(&self) -> usize;
 
     fn to_bytes(&self) -> Vec<u8>;
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized;
 
@@ -18,8 +20,8 @@ pub trait TBytes {
         Self: Sized,
     {
         let mut buffer = buffer.to_vec();
-        buffer.reverse();
-        Self::from_bytes(&mut buffer)
+        let tmp = Self::from_bytes(&mut buffer.drain(..));
+        tmp
     }
 }
 
@@ -28,5 +30,6 @@ pub use bytes_kman_derive::Bytes;
 
 pub mod prelude {
     pub use super::Bytes;
+    pub use super::TBuffer;
     pub use super::TBytes;
 }

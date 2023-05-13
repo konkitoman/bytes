@@ -1,4 +1,4 @@
-use crate::TBytes;
+use crate::{TBuffer, TBytes};
 
 impl<T: TBytes> TBytes for ::std::ops::Range<T> {
     fn size(&self) -> usize {
@@ -14,7 +14,7 @@ impl<T: TBytes> TBytes for ::std::ops::Range<T> {
         buffer
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
@@ -39,7 +39,7 @@ impl<T: TBytes> TBytes for ::std::ops::RangeInclusive<T> {
         buffer
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
@@ -59,7 +59,7 @@ impl<T: TBytes> TBytes for ::std::ops::RangeToInclusive<T> {
         self.end.to_bytes()
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
@@ -77,7 +77,7 @@ impl TBytes for ::std::ops::RangeFull {
         Vec::new()
     }
 
-    fn from_bytes(_: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(_: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
@@ -94,7 +94,7 @@ impl<T: TBytes> TBytes for ::std::ops::RangeTo<T> {
         self.end.to_bytes()
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
@@ -112,7 +112,7 @@ impl<T: TBytes> TBytes for ::std::ops::RangeFrom<T> {
         self.start.to_bytes()
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
@@ -132,9 +132,8 @@ mod test {
         let a = 13..21;
 
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let b = <Range<i32>>::from_bytes(&mut bytes).unwrap();
+        let b = <Range<i32>>::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(a, b)
     }
@@ -144,9 +143,8 @@ mod test {
         let a = ..21;
 
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let b = <RangeTo<i32>>::from_bytes(&mut bytes).unwrap();
+        let b = <RangeTo<i32>>::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(a, b)
     }
@@ -156,9 +154,8 @@ mod test {
         let a = 21..;
 
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let b = <RangeFrom<i32>>::from_bytes(&mut bytes).unwrap();
+        let b = <RangeFrom<i32>>::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(a, b)
     }
@@ -168,9 +165,8 @@ mod test {
         let a = 6..=21;
 
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let b = <RangeInclusive<i32>>::from_bytes(&mut bytes).unwrap();
+        let b = <RangeInclusive<i32>>::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(a, b)
     }
@@ -180,9 +176,8 @@ mod test {
         let a = ..=23;
 
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let b = <RangeToInclusive<i32>>::from_bytes(&mut bytes).unwrap();
+        let b = <RangeToInclusive<i32>>::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(a, b)
     }

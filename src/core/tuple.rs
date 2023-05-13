@@ -1,4 +1,4 @@
-use crate::TBytes;
+use crate::{TBuffer, TBytes};
 
 macro_rules! impl_tuple {
     ($($T: ident),+; $($N: tt),+) => {
@@ -15,7 +15,7 @@ macro_rules! impl_tuple {
                 buffer
             }
 
-            fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>{
+            fn from_bytes(buffer: &mut TBuffer) -> Option<Self>{
                 Some(($($T::from_bytes(buffer)?),*))
             }
 
@@ -47,9 +47,8 @@ mod test {
         let a = (1i32, 53i64);
 
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let b = <(i32, i64)>::from_bytes(&mut bytes).unwrap();
+        let b = <(i32, i64)>::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(a, b);
     }
@@ -61,9 +60,8 @@ mod test {
         let a: R = Ok((42i32, 21i64));
 
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let b = R::from_bytes(&mut bytes).unwrap();
+        let b = R::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(a, b);
     }

@@ -1,6 +1,6 @@
 use std::ffi::OsString;
 
-use crate::TBytes;
+use crate::{TBuffer, TBytes};
 
 // TODO: Should fix on linux utf16 characters will be ignored
 impl TBytes for std::ffi::OsString {
@@ -31,7 +31,7 @@ impl TBytes for std::ffi::OsString {
         buffer
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
@@ -40,8 +40,8 @@ impl TBytes for std::ffi::OsString {
         for _ in 0..len {
             #[cfg(target_os = "linux")]
             {
-                buff.push(buffer.pop()?);
-                buffer.pop();
+                buff.push(buffer.next()?);
+                buffer.next();
             }
             #[cfg(target_os = "windows")]
             buff.push(u16::from_bytes(buffer)?);
@@ -67,9 +67,8 @@ mod test {
     fn os_string() {
         let a = OsString::from("Hello World");
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let b = OsString::from_bytes(&mut bytes).unwrap();
+        let b = OsString::from_bytes(&mut bytes.drain(..)).unwrap();
         assert_eq!(a, b);
     }
 }

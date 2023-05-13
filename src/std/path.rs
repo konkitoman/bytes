@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::TBytes;
+use crate::{TBuffer, TBytes};
 
 impl TBytes for PathBuf {
     fn size(&self) -> usize {
@@ -11,7 +11,7 @@ impl TBytes for PathBuf {
         self.as_os_str().to_os_string().to_bytes()
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {

@@ -1,4 +1,4 @@
-use crate::TBytes;
+use crate::{TBuffer, TBytes};
 
 impl<T: TBytes> TBytes for Option<T> {
     fn size(&self) -> usize {
@@ -22,11 +22,11 @@ impl<T: TBytes> TBytes for Option<T> {
         buffer
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
-        let has = buffer.pop()?;
+        let has = buffer.next()?;
 
         if has > 0 {
             Some(Some(T::from_bytes(buffer)?))
@@ -45,18 +45,16 @@ mod test {
         let a = Some(String::from("Hello There"));
 
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let other = <Option<String>>::from_bytes(&mut bytes).unwrap();
+        let other = <Option<String>>::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(a, other);
 
         let b: Option<String> = None;
 
         let mut bytes = b.to_bytes();
-        bytes.reverse();
 
-        let other = <Option<String>>::from_bytes(&mut bytes).unwrap();
+        let other = <Option<String>>::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(b, other)
     }

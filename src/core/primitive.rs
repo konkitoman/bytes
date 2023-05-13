@@ -1,6 +1,6 @@
 use ::core::primitive::bool;
 
-use crate::TBytes;
+use crate::{TBuffer, TBytes};
 
 impl TBytes for bool {
     fn size(&self) -> usize {
@@ -15,11 +15,11 @@ impl TBytes for bool {
         }
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
-        let byte = buffer.pop()?;
+        let byte = buffer.next()?;
         if byte > 0 {
             Some(true)
         } else {
@@ -37,15 +37,15 @@ impl TBytes for f32 {
         self.to_le_bytes().to_vec()
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
         Some(Self::from_le_bytes([
-            buffer.pop()?,
-            buffer.pop()?,
-            buffer.pop()?,
-            buffer.pop()?,
+            buffer.next()?,
+            buffer.next()?,
+            buffer.next()?,
+            buffer.next()?,
         ]))
     }
 }
@@ -59,19 +59,19 @@ impl TBytes for f64 {
         self.to_le_bytes().to_vec()
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
         Some(Self::from_le_bytes([
-            buffer.pop()?,
-            buffer.pop()?,
-            buffer.pop()?,
-            buffer.pop()?,
-            buffer.pop()?,
-            buffer.pop()?,
-            buffer.pop()?,
-            buffer.pop()?,
+            buffer.next()?,
+            buffer.next()?,
+            buffer.next()?,
+            buffer.next()?,
+            buffer.next()?,
+            buffer.next()?,
+            buffer.next()?,
+            buffer.next()?,
         ]))
     }
 }
@@ -85,18 +85,16 @@ mod test {
         let a = true;
 
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let other = bool::from_bytes(&mut bytes).unwrap();
+        let other = bool::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(a, other);
 
         let b = true;
 
         let mut bytes = b.to_bytes();
-        bytes.reverse();
 
-        let other = bool::from_bytes(&mut bytes).unwrap();
+        let other = bool::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(b, other)
     }
@@ -106,9 +104,8 @@ mod test {
         let a = 5234.0f32;
 
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let other = f32::from_bytes(&mut bytes).unwrap();
+        let other = f32::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(a, other)
     }
@@ -118,9 +115,8 @@ mod test {
         let a = 43223.32f64;
 
         let mut bytes = a.to_bytes();
-        bytes.reverse();
 
-        let other = f64::from_bytes(&mut bytes).unwrap();
+        let other = f64::from_bytes(&mut bytes.drain(..)).unwrap();
 
         assert_eq!(a, other)
     }

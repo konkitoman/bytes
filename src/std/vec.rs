@@ -1,4 +1,4 @@
-use crate::TBytes;
+use crate::{TBuffer, TBytes};
 
 impl<T> TBytes for Vec<T>
 where
@@ -24,7 +24,7 @@ where
         buffer
     }
 
-    fn from_bytes(buffer: &mut Vec<u8>) -> Option<Self>
+    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>
     where
         Self: Sized,
     {
@@ -49,9 +49,7 @@ mod test {
 
         let mut b = a.to_bytes();
 
-        b.reverse();
-
-        let other = <Vec<String>>::from_bytes(&mut b).unwrap();
+        let other = <Vec<String>>::from_bytes(&mut b.drain(..)).unwrap();
 
         assert_eq!(a, other)
     }
