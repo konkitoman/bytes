@@ -35,16 +35,69 @@ impl TBytes for std::ffi::OsString {
     where
         Self: Sized,
     {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
         let len = usize::from_bytes(buffer)?;
+        if buffer.len() < len * 2 {
+            let mut bytes = len.to_bytes();
+            while let Some(byte) = bytes.pop() {
+                buffer.insert(0, byte)
+            }
+            return None;
+        }
+
         let mut buff = Vec::with_capacity(len);
         for _ in 0..len {
             #[cfg(target_os = "linux")]
             {
-                buff.push(buffer.next()?);
-                buffer.next();
+                let mut iter = buffer.drain(..2);
+                let value = iter.next();
+                if let Some(value) = value {
+                    if let Some(_) = iter.next() {
+                        buff.push(value);
+                    } else {
+                        drop(iter);
+                        buffer.insert(0, value);
+                        while let Some(byte) = buff.pop() {
+                            buffer.insert(0, byte);
+                        }
+                        let mut bytes = len.to_bytes();
+                        while let Some(byte) = bytes.pop() {
+                            buffer.insert(0, byte)
+                        }
+                        return None;
+                    }
+                } else {
+                    drop(iter);
+                    while let Some(byte) = buff.pop() {
+                        buffer.insert(0, byte);
+                    }
+                    let mut bytes = len.to_bytes();
+                    while let Some(byte) = bytes.pop() {
+                        buffer.insert(0, byte)
+                    }
+                    return None;
+                }
             }
             #[cfg(target_os = "windows")]
-            buff.push(u16::from_bytes(buffer)?);
+            {
+                if let Some(value) = u16::from_bytes(buffer) {
+                    buff.push(value);
+                } else {
+                    while let Some(element) = buff.pop() {
+                        let mut bytes = element.to_bytes();
+                        while let Some(byte) = bytes.pop() {
+                            buffer.insert(0, byte);
+                        }
+                    }
+                    let mut bytes = len.to_bytes();
+                    while let Some(byte) = bytes.pop() {
+                        buffer.insert(0, byte)
+                    }
+                    return None;
+                }
+            }
         }
         #[cfg(target_os = "linux")]
         use std::os::unix::ffi::OsStringExt;
@@ -68,7 +121,32 @@ mod test {
         let a = OsString::from("Hello World");
         let mut bytes = a.to_bytes();
 
-        let b = OsString::from_bytes(&mut bytes.drain(..)).unwrap();
+        let b = OsString::from_bytes(&mut bytes).unwrap();
         assert_eq!(a, b);
+    }
+
+    #[test]
+    fn incomplite() {
+        let mut buffer = Vec::new();
+        buffer.append(&mut 4usize.to_bytes());
+        buffer.push(b'g');
+        buffer.push(0);
+        buffer.push(b'r');
+        buffer.push(0);
+        buffer.push(b'a');
+        buffer.push(0);
+        let clone_buffer = buffer.clone();
+
+        let other_buffer = OsString::from_bytes(&mut buffer);
+        if let Some(other_buffer) = other_buffer {
+            panic!("This should be possible! Other buffer: {other_buffer:?}");
+        }
+
+        assert_eq!(buffer, clone_buffer);
+
+        buffer.push(b'y');
+        buffer.push(0);
+        let value = OsString::from_bytes(&mut buffer).unwrap();
+        assert_eq!(value, OsString::from("gray"))
     }
 }

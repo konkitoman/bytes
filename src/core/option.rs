@@ -26,7 +26,13 @@ impl<T: TBytes> TBytes for Option<T> {
     where
         Self: Sized,
     {
-        let has = buffer.next()?;
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut iter = buffer.drain(0..Self::default().size());
+        let has = iter.next()?;
+
+        drop(iter);
 
         if has > 0 {
             Some(Some(T::from_bytes(buffer)?))
@@ -46,7 +52,7 @@ mod test {
 
         let mut bytes = a.to_bytes();
 
-        let other = <Option<String>>::from_bytes(&mut bytes.drain(..)).unwrap();
+        let other = <Option<String>>::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(a, other);
 
@@ -54,7 +60,7 @@ mod test {
 
         let mut bytes = b.to_bytes();
 
-        let other = <Option<String>>::from_bytes(&mut bytes.drain(..)).unwrap();
+        let other = <Option<String>>::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(b, other)
     }

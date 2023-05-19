@@ -60,7 +60,7 @@ mod test {
 
         let mut bytes = a.to_bytes();
 
-        let other = <[i32; 6]>::from_bytes(&mut bytes.drain(..)).unwrap();
+        let other = <[i32; 6]>::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(a, other);
     }
@@ -75,7 +75,7 @@ mod test {
 
         let mut bytes = a.to_bytes();
 
-        let other = <[String; 3]>::from_bytes(&mut bytes.drain(..)).unwrap();
+        let other = <[String; 3]>::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(a, other);
     }

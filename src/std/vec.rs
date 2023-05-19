@@ -1,9 +1,6 @@
 use crate::{TBuffer, TBytes};
 
-impl<T> TBytes for Vec<T>
-where
-    T: TBytes,
-{
+impl<T: TBytes> TBytes for Vec<T> {
     fn size(&self) -> usize {
         let mut size = 0usize.size();
         for seg in self.iter() {
@@ -28,11 +25,28 @@ where
     where
         Self: Sized,
     {
+        if buffer.len() < 0usize.size() {
+            return None;
+        }
         let len = usize::from_bytes(buffer)?;
         let mut res = Vec::with_capacity(len);
 
         for _ in 0..len {
-            res.push(T::from_bytes(buffer)?)
+            if let Some(element) = T::from_bytes(buffer) {
+                res.push(element)
+            } else {
+                while let Some(element) = res.pop() {
+                    let mut bytes = element.to_bytes();
+                    while let Some(byte) = bytes.pop() {
+                        buffer.insert(0, byte);
+                    }
+                }
+                let mut bytes = len.to_bytes();
+                while let Some(byte) = bytes.pop() {
+                    buffer.insert(0, byte);
+                }
+                return None;
+            }
         }
 
         Some(res)
@@ -49,8 +63,41 @@ mod test {
 
         let mut b = a.to_bytes();
 
-        let other = <Vec<String>>::from_bytes(&mut b.drain(..)).unwrap();
+        let other = <Vec<String>>::from_bytes(&mut b).unwrap();
 
         assert_eq!(a, other)
+    }
+
+    #[test]
+    fn incoplete() {
+        let mut buffer = Vec::new();
+        buffer.append(&mut 4usize.to_bytes());
+        buffer.push(21);
+        buffer.push(69);
+        let clone_buffer = buffer.clone();
+
+        let other_buffer = Vec::<u8>::from_bytes(&mut buffer);
+        if let Some(other_buffer) = other_buffer {
+            panic!("This should be possible! Other buffer: {other_buffer:?}");
+        }
+
+        assert_eq!(buffer, clone_buffer)
+    }
+
+    #[test]
+    fn incoplete_unsized() {
+        let mut buffer = Vec::new();
+        buffer.append(&mut 4usize.to_bytes());
+        buffer.append(&mut String::from("Hello World!").to_bytes());
+        buffer.append(&mut String::from("Hello Made!").to_bytes());
+        buffer.append(&mut String::from("Samuel?").to_bytes());
+        let clone_buffer = buffer.clone();
+
+        let other_buffer = Vec::<String>::from_bytes(&mut buffer);
+        if let Some(other_buffer) = other_buffer {
+            panic!("This should be possible! Other buffer: {other_buffer:?}");
+        }
+
+        assert_eq!(buffer, clone_buffer)
     }
 }

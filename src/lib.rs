@@ -4,7 +4,7 @@ pub mod core;
 #[cfg(feature = "std")]
 pub mod std;
 
-pub type TBuffer<'a> = dyn Iterator<Item = u8> + 'a;
+pub type TBuffer<'a> = Vec<u8>;
 
 pub trait TBytes {
     fn size(&self) -> usize;
@@ -20,7 +20,7 @@ pub trait TBytes {
         Self: Sized,
     {
         let mut buffer = buffer.to_vec();
-        let tmp = Self::from_bytes(&mut buffer.drain(..));
+        let tmp = Self::from_bytes(&mut buffer);
         tmp
     }
 }

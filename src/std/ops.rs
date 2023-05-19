@@ -18,10 +18,22 @@ impl<T: TBytes> TBytes for ::std::ops::Range<T> {
     where
         Self: Sized,
     {
-        let start = T::from_bytes(buffer)?;
-        let end = T::from_bytes(buffer)?;
+        let start = T::from_bytes(buffer);
+        let end = T::from_bytes(buffer);
 
-        Some(start..end)
+        if let Some(start) = start {
+            if let Some(end) = end {
+                Some(start..end)
+            } else {
+                let mut bytes = start.to_bytes();
+                while let Some(byte) = bytes.pop() {
+                    buffer.insert(0, byte)
+                }
+                None
+            }
+        } else {
+            None
+        }
     }
 }
 
@@ -43,10 +55,22 @@ impl<T: TBytes> TBytes for ::std::ops::RangeInclusive<T> {
     where
         Self: Sized,
     {
-        let start = T::from_bytes(buffer)?;
-        let end = T::from_bytes(buffer)?;
+        let start = T::from_bytes(buffer);
+        let end = T::from_bytes(buffer);
 
-        Some(start..=end)
+        if let Some(start) = start {
+            if let Some(end) = end {
+                Some(start..=end)
+            } else {
+                let mut bytes = start.to_bytes();
+                while let Some(byte) = bytes.pop() {
+                    buffer.insert(0, byte)
+                }
+                None
+            }
+        } else {
+            None
+        }
     }
 }
 
@@ -133,9 +157,28 @@ mod test {
 
         let mut bytes = a.to_bytes();
 
-        let b = <Range<i32>>::from_bytes(&mut bytes.drain(..)).unwrap();
+        let b = <Range<i32>>::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(a, b)
+    }
+
+    #[test]
+    fn range_incomplete() {
+        let mut buffer = Vec::new();
+        buffer.append(&mut 50usize.to_bytes());
+
+        let clone_buffer = buffer.clone();
+
+        let other_buffer = Range::<usize>::from_bytes(&mut buffer);
+        if let Some(other_buffer) = other_buffer {
+            panic!("This should be possible! Other buffer: {other_buffer:?}");
+        }
+
+        assert_eq!(buffer, clone_buffer);
+        buffer.append(&mut 100usize.to_bytes());
+
+        let value = Range::<usize>::from_bytes(&mut buffer).unwrap();
+        assert_eq!(value, 50..100)
     }
 
     #[test]
@@ -144,7 +187,7 @@ mod test {
 
         let mut bytes = a.to_bytes();
 
-        let b = <RangeTo<i32>>::from_bytes(&mut bytes.drain(..)).unwrap();
+        let b = <RangeTo<i32>>::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(a, b)
     }
@@ -155,7 +198,7 @@ mod test {
 
         let mut bytes = a.to_bytes();
 
-        let b = <RangeFrom<i32>>::from_bytes(&mut bytes.drain(..)).unwrap();
+        let b = <RangeFrom<i32>>::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(a, b)
     }
@@ -166,9 +209,28 @@ mod test {
 
         let mut bytes = a.to_bytes();
 
-        let b = <RangeInclusive<i32>>::from_bytes(&mut bytes.drain(..)).unwrap();
+        let b = <RangeInclusive<i32>>::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(a, b)
+    }
+
+    #[test]
+    fn range_inclusive_incomplete() {
+        let mut buffer = Vec::new();
+        buffer.append(&mut 50usize.to_bytes());
+
+        let clone_buffer = buffer.clone();
+
+        let other_buffer = RangeInclusive::<usize>::from_bytes(&mut buffer);
+        if let Some(other_buffer) = other_buffer {
+            panic!("This should be possible! Other buffer: {other_buffer:?}");
+        }
+
+        assert_eq!(buffer, clone_buffer);
+        buffer.append(&mut 100usize.to_bytes());
+
+        let value = RangeInclusive::<usize>::from_bytes(&mut buffer).unwrap();
+        assert_eq!(value, 50..=100)
     }
 
     #[test]
@@ -177,7 +239,7 @@ mod test {
 
         let mut bytes = a.to_bytes();
 
-        let b = <RangeToInclusive<i32>>::from_bytes(&mut bytes.drain(..)).unwrap();
+        let b = <RangeToInclusive<i32>>::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(a, b)
     }

@@ -48,7 +48,7 @@ mod test {
 
         let mut bytes = a.to_bytes();
 
-        let b = <(i32, i64)>::from_bytes(&mut bytes.drain(..)).unwrap();
+        let b = <(i32, i64)>::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(a, b);
     }
@@ -61,7 +61,7 @@ mod test {
 
         let mut bytes = a.to_bytes();
 
-        let b = R::from_bytes(&mut bytes.drain(..)).unwrap();
+        let b = R::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(a, b);
     }

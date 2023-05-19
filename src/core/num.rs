@@ -11,6 +11,10 @@ impl TBytes for u8 {
     }
 
     fn from_bytes(buffer: &mut TBuffer) -> Option<Self> {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         let bytes = [buffer.next()?];
         Some(u8::from_le_bytes(bytes))
     }
@@ -26,6 +30,10 @@ impl TBytes for u16 {
     }
 
     fn from_bytes(buffer: &mut TBuffer) -> Option<Self> {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         let bytes = [buffer.next()?, buffer.next()?];
         Some(u16::from_le_bytes(bytes))
     }
@@ -44,6 +52,10 @@ impl TBytes for u32 {
     where
         Self: Sized,
     {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         let bytes = [
             buffer.next()?,
             buffer.next()?,
@@ -67,6 +79,10 @@ impl TBytes for u64 {
     where
         Self: Sized,
     {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         let bytes = [
             buffer.next()?,
             buffer.next()?,
@@ -93,6 +109,10 @@ impl TBytes for u128 {
     where
         Self: Sized,
     {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         let bytes = [
             buffer.next()?,
             buffer.next()?,
@@ -128,6 +148,10 @@ impl TBytes for usize {
     where
         Self: Sized,
     {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         let bytes = [
             buffer.next()?,
             buffer.next()?,
@@ -152,6 +176,10 @@ impl TBytes for i8 {
     }
 
     fn from_bytes(buffer: &mut TBuffer) -> Option<Self> {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         let bytes = [buffer.next()?];
         Some(i8::from_le_bytes(bytes))
     }
@@ -167,6 +195,10 @@ impl TBytes for i16 {
     }
 
     fn from_bytes(buffer: &mut TBuffer) -> Option<Self> {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         let bytes = [buffer.next()?, buffer.next()?];
         Some(i16::from_le_bytes(bytes))
     }
@@ -185,6 +217,10 @@ impl TBytes for i32 {
     where
         Self: Sized,
     {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         let bytes = [
             buffer.next()?,
             buffer.next()?,
@@ -208,6 +244,10 @@ impl TBytes for i64 {
     where
         Self: Sized,
     {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         let bytes = [
             buffer.next()?,
             buffer.next()?,
@@ -234,6 +274,10 @@ impl TBytes for i128 {
     where
         Self: Sized,
     {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         let bytes = [
             buffer.next()?,
             buffer.next()?,
@@ -269,6 +313,10 @@ impl TBytes for isize {
     where
         Self: Sized,
     {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         let bytes = [
             buffer.next()?,
             buffer.next()?,
@@ -292,7 +340,7 @@ mod test {
         let a = 42u8;
 
         let mut b = a.to_bytes();
-        let other = u8::from_bytes(&mut b.drain(..)).unwrap();
+        let other = u8::from_bytes(&mut b).unwrap();
 
         assert_eq!(a, other)
     }
@@ -302,7 +350,7 @@ mod test {
         let a = 42u16;
 
         let mut b = a.to_bytes();
-        let other = u16::from_bytes(&mut b.drain(..)).unwrap();
+        let other = u16::from_bytes(&mut b).unwrap();
 
         assert_eq!(a, other)
     }
@@ -312,7 +360,7 @@ mod test {
         let a = 42u32;
 
         let mut b = a.to_bytes();
-        let other = u32::from_bytes(&mut b.drain(..)).unwrap();
+        let other = u32::from_bytes(&mut b).unwrap();
 
         assert_eq!(a, other)
     }
@@ -322,7 +370,7 @@ mod test {
         let a = 42u64;
 
         let mut b = a.to_bytes();
-        let other = u64::from_bytes(&mut b.drain(..)).unwrap();
+        let other = u64::from_bytes(&mut b).unwrap();
 
         assert_eq!(a, other)
     }
@@ -332,7 +380,7 @@ mod test {
         let a = 42u128;
 
         let mut b = a.to_bytes();
-        let other = u128::from_bytes(&mut b.drain(..)).unwrap();
+        let other = u128::from_bytes(&mut b).unwrap();
 
         assert_eq!(a, other)
     }
@@ -342,7 +390,7 @@ mod test {
         let a = 42usize;
 
         let mut b = a.to_bytes();
-        let other = usize::from_bytes(&mut b.drain(..)).unwrap();
+        let other = usize::from_bytes(&mut b).unwrap();
 
         assert_eq!(a, other)
     }
@@ -352,7 +400,7 @@ mod test {
         let a = 42i8;
 
         let mut b = a.to_bytes();
-        let other = i8::from_bytes(&mut b.drain(..)).unwrap();
+        let other = i8::from_bytes(&mut b).unwrap();
 
         assert_eq!(a, other)
     }
@@ -362,7 +410,7 @@ mod test {
         let a = 42i16;
 
         let mut b = a.to_bytes();
-        let other = i16::from_bytes(&mut b.drain(..)).unwrap();
+        let other = i16::from_bytes(&mut b).unwrap();
 
         assert_eq!(a, other)
     }
@@ -372,7 +420,7 @@ mod test {
         let a = 42i32;
 
         let mut b = a.to_bytes();
-        let other = i32::from_bytes(&mut b.drain(..)).unwrap();
+        let other = i32::from_bytes(&mut b).unwrap();
 
         assert_eq!(a, other)
     }
@@ -382,7 +430,7 @@ mod test {
         let a = 42i64;
 
         let mut b = a.to_bytes();
-        let other = i64::from_bytes(&mut b.drain(..)).unwrap();
+        let other = i64::from_bytes(&mut b).unwrap();
 
         assert_eq!(a, other)
     }
@@ -392,7 +440,7 @@ mod test {
         let a = 42i128;
 
         let mut b = a.to_bytes();
-        let other = i128::from_bytes(&mut b.drain(..)).unwrap();
+        let other = i128::from_bytes(&mut b).unwrap();
 
         assert_eq!(a, other)
     }
@@ -402,7 +450,7 @@ mod test {
         let a = 42isize;
 
         let mut b = a.to_bytes();
-        let other = isize::from_bytes(&mut b.drain(..)).unwrap();
+        let other = isize::from_bytes(&mut b).unwrap();
 
         assert_eq!(a, other)
     }

@@ -29,7 +29,12 @@ impl<T: TBytes, E: TBytes> TBytes for Result<T, E> {
     where
         Self: Sized,
     {
-        let variant = buffer.next()?;
+        if buffer.is_empty() {
+            return None;
+        }
+        let mut iter = buffer.drain(0..1);
+        let variant = iter.next()?;
+        drop(iter);
 
         match variant {
             0 => Some(Ok(T::from_bytes(buffer)?)),

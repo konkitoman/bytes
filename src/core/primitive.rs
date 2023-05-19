@@ -19,6 +19,10 @@ impl TBytes for bool {
     where
         Self: Sized,
     {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         let byte = buffer.next()?;
         if byte > 0 {
             Some(true)
@@ -41,6 +45,10 @@ impl TBytes for f32 {
     where
         Self: Sized,
     {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         Some(Self::from_le_bytes([
             buffer.next()?,
             buffer.next()?,
@@ -63,6 +71,10 @@ impl TBytes for f64 {
     where
         Self: Sized,
     {
+        if buffer.len() < Self::default().size() {
+            return None;
+        }
+        let mut buffer = buffer.drain(0..Self::default().size());
         Some(Self::from_le_bytes([
             buffer.next()?,
             buffer.next()?,
@@ -86,7 +98,7 @@ mod test {
 
         let mut bytes = a.to_bytes();
 
-        let other = bool::from_bytes(&mut bytes.drain(..)).unwrap();
+        let other = bool::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(a, other);
 
@@ -94,7 +106,7 @@ mod test {
 
         let mut bytes = b.to_bytes();
 
-        let other = bool::from_bytes(&mut bytes.drain(..)).unwrap();
+        let other = bool::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(b, other)
     }
@@ -105,7 +117,7 @@ mod test {
 
         let mut bytes = a.to_bytes();
 
-        let other = f32::from_bytes(&mut bytes.drain(..)).unwrap();
+        let other = f32::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(a, other)
     }
@@ -116,7 +128,7 @@ mod test {
 
         let mut bytes = a.to_bytes();
 
-        let other = f64::from_bytes(&mut bytes.drain(..)).unwrap();
+        let other = f64::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(a, other)
     }
