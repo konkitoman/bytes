@@ -37,8 +37,22 @@ impl<T: TBytes, E: TBytes> TBytes for Result<T, E> {
         drop(iter);
 
         match variant {
-            0 => Some(Ok(T::from_bytes(buffer)?)),
-            1 => Some(Err(E::from_bytes(buffer)?)),
+            0 => {
+                if let Some(value) = T::from_bytes(buffer) {
+                    Some(Ok(value))
+                } else {
+                    buffer.insert(0, variant);
+                    None
+                }
+            }
+            1 => {
+                if let Some(value) = E::from_bytes(buffer) {
+                    Some(Err(value))
+                } else {
+                    buffer.insert(0, variant);
+                    None
+                }
+            }
             _ => None,
         }
     }

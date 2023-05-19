@@ -454,4 +454,22 @@ mod test {
 
         assert_eq!(a, other)
     }
+
+    #[test]
+    fn incomplete_u16() {
+        let mut buffer = Vec::new();
+        buffer.push(10);
+        let clone_buffer = buffer.clone();
+
+        let other_buffer = u16::from_bytes(&mut buffer);
+        if let Some(other_buffer) = other_buffer {
+            panic!("This should be possible! Other buffer: {other_buffer:?}");
+        }
+
+        assert_eq!(buffer, clone_buffer);
+        buffer.push(1);
+
+        let value = u16::from_bytes(&mut buffer).unwrap();
+        assert_eq!(value, 266)
+    }
 }

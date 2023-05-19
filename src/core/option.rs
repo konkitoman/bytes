@@ -35,7 +35,12 @@ impl<T: TBytes> TBytes for Option<T> {
         drop(iter);
 
         if has > 0 {
-            Some(Some(T::from_bytes(buffer)?))
+            if let Some(value) = T::from_bytes(buffer) {
+                Some(Some(value))
+            } else {
+                buffer.insert(0, has);
+                None
+            }
         } else {
             Some(None)
         }
@@ -63,5 +68,26 @@ mod test {
         let other = <Option<String>>::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(b, other)
+    }
+
+    #[test]
+    fn option_incomplite() {
+        let mut buffer = Vec::new();
+        buffer.push(1);
+        buffer.push(21);
+
+        let clone_buffer = buffer.clone();
+
+        let other_buffer = Option::<u16>::from_bytes(&mut buffer);
+        if let Some(other_buffer) = other_buffer {
+            panic!("This should be possible! Other buffer: {other_buffer:?}");
+        }
+
+        assert_eq!(buffer, clone_buffer);
+        buffer.push(0);
+
+        assert_eq!(buffer, Some(21u16).to_bytes());
+        let value = Option::<u16>::from_bytes(&mut buffer).unwrap();
+        assert_eq!(value, Some(21u16))
     }
 }

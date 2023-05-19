@@ -32,7 +32,17 @@ impl<T: TBytes, const LEN: usize> TBytes for [T; LEN] {
         let mut res = Vec::with_capacity(LEN);
 
         for _ in 0..LEN {
-            res.push(T::from_bytes(buffer)?)
+            if let Some(value) = T::from_bytes(buffer) {
+                res.push(value)
+            } else {
+                while let Some(element) = res.pop() {
+                    let mut bytes = element.to_bytes();
+                    while let Some(byte) = bytes.pop() {
+                        buffer.insert(0, byte)
+                    }
+                }
+                return None;
+            }
         }
 
         // this will create a static reference
@@ -78,5 +88,26 @@ mod test {
         let other = <[String; 3]>::from_bytes(&mut bytes).unwrap();
 
         assert_eq!(a, other);
+    }
+
+    #[test]
+    fn incomplete() {
+        let mut buffer = Vec::new();
+        let strings = ["Where", "Are", "You", "From"].map(|w| w.to_string());
+        for string in &strings[0..3] {
+            buffer.append(&mut string.to_bytes());
+        }
+        let clone_buffer = buffer.clone();
+
+        let other_buffer = <[String; 4]>::from_bytes(&mut buffer);
+        if let Some(other_buffer) = other_buffer {
+            panic!("This should be possible! Other buffer: {other_buffer:?}");
+        }
+
+        assert_eq!(buffer, clone_buffer);
+        buffer.append(&mut strings[3].to_bytes());
+
+        let value = <[String; 4]>::from_bytes(&mut buffer).unwrap();
+        assert_eq!(value, strings)
     }
 }
