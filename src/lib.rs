@@ -20,8 +20,7 @@ pub trait TBytes {
         Self: Sized,
     {
         let mut buffer = buffer.to_vec();
-        let tmp = Self::from_bytes(&mut buffer);
-        tmp
+        Self::from_bytes(&mut buffer)
     }
 }
 

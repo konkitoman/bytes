@@ -139,7 +139,7 @@ mod test {
             String,
             String,
         )>::from_bytes(&mut buffer);
-        if let Some(other_buffer) = other_buffer {
+        if other_buffer.is_some() {
             panic!("This should be possible! Other buffer: {clone_buffer:?}");
         }
 

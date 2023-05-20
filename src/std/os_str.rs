@@ -54,7 +54,7 @@ impl TBytes for std::ffi::OsString {
                 let mut iter = buffer.drain(..2);
                 let value = iter.next();
                 if let Some(value) = value {
-                    if let Some(_) = iter.next() {
+                    if iter.next().is_some() {
                         buff.push(value);
                     } else {
                         drop(iter);

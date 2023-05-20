@@ -14,7 +14,7 @@ fn incomplete_test() {
     buffer.append(&mut 6666i64.to_bytes());
     let clone_buffer = buffer.clone();
 
-    if let Some(_) = Test::from_bytes(&mut buffer) {
+    if Test::from_bytes(&mut buffer).is_some() {
         panic!("This should not happen because is incomplete!");
     }
 
@@ -43,7 +43,7 @@ fn incomplete_test2() {
     buffer.append(&mut 53.to_bytes());
     let clone_buffer = buffer.clone();
 
-    if let Some(_) = Test2::from_bytes(&mut buffer) {
+    if Test2::from_bytes(&mut buffer).is_some() {
         panic!("This should not happen because is incomplete!");
     }
 
