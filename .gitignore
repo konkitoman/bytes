@@ -2,3 +2,4 @@
 /Cargo.lock
 /derive/Cargo.lock
 /derive/target
+/derive-tests/target

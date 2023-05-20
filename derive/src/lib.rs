@@ -36,8 +36,30 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
 
                 types.push(field.ty);
             }
+
             if !names.is_empty() {
+                let mut from_bytes_blocks = Vec::new();
+
+                for (i, (name, type_)) in names.iter().zip(types.iter()).enumerate() {
+                    let mut before_names = Vec::new();
+                    for name in names[0..i].iter().rev() {
+                        before_names.push(name);
+                    }
+                    from_bytes_blocks.push(quote! {
+                        let #name = if let Some(value) = <#type_>::from_bytes(buffer) {value}else{
+                            #(
+                                let mut bytes = #before_names.to_bytes();
+                                while let Some(byte) = bytes.pop(){
+                                    buffer.insert(0, byte);
+                                }
+                            )*
+                            return None;
+                        };
+                    });
+                }
+
                 quote! {
+                    #[allow(clippy::question_mark)]
                     impl #generics TBytes for #ident #generics #gen_where{
                         fn size(&self) -> usize{
                             #(self.#names.size())+*
@@ -51,8 +73,8 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                             buffer
                         }
 
-                        fn from_bytes(bytes: &mut TBuffer) -> Option<Self>{
-                            #(let #names = <#types>::from_bytes(bytes)?;)*
+                        fn from_bytes(buffer: &mut TBuffer) -> Option<Self>{
+                            #(#from_bytes_blocks)*
                             Some(Self{
                                 #(#names),*
                             })
@@ -68,7 +90,29 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                     .iter()
                     .map(|n| format_ident!("v{}", n))
                     .collect::<Vec<proc_macro2::Ident>>();
+
+                let mut from_bytes_blocks = Vec::new();
+
+                for (i, (name, type_)) in names.iter().zip(types.iter()).enumerate() {
+                    let mut before_names = Vec::new();
+                    for name in names[0..i].iter().rev() {
+                        before_names.push(name);
+                    }
+                    from_bytes_blocks.push(quote! {
+                        let #name = if let Some(value) = <#type_>::from_bytes(buffer) {value}else{
+                            #(
+                                let mut bytes = #before_names.to_bytes();
+                                while let Some(byte) = bytes.pop(){
+                                    buffer.insert(0, byte);
+                                }
+                            )*
+                            return None;
+                        };
+                    });
+                }
+
                 quote! {
+                    #[allow(clippy::question_mark)]
                     impl #generics TBytes for #ident #generics #gen_where{
                         fn size(&self) -> usize{
                             #(self.#nums.size())+*
@@ -82,8 +126,8 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                             buffer
                         }
 
-                        fn from_bytes(bytes: &mut TBuffer) -> Option<Self>{
-                            #(let #names = <#types>::from_bytes(bytes)?;)*
+                        fn from_bytes(buffer: &mut TBuffer) -> Option<Self>{
+                            #(#from_bytes_blocks)*
                             Some(Self(
                                 #(#names),*
                             ))
@@ -105,8 +149,8 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
 
             for (i, variant) in e.variants.iter().enumerate() {
                 idxs.push(i);
-                idents.push(variant.ident.clone());
-                fields.push(variant.fields.clone());
+                idents.push(&variant.ident);
+                fields.push(&variant.fields);
             }
 
             // [Self::Auth { id: <u16>::from_bytes(bytes)?] } or
@@ -136,14 +180,14 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                     if let Some(ident) = field.ident.clone() {
                         is_object = true;
                         variant_init_vars.push(quote!(
-                           #ident : <#ty>::from_bytes(bytes)?
+                           #ident : <#ty>::from_bytes(buffer)?
                         ));
                         variant_vars.push(quote!(
                             #ident
                         ));
                     } else {
                         variant_init_vars.push(quote!(
-                           <#ty>::from_bytes(bytes)?
+                           <#ty>::from_bytes(buffer)?
                         ));
                         let vii = format_ident!("v{}", ii);
                         variant_vars.push(quote!(#vii));
@@ -169,28 +213,66 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                     variant_size.push(quote! {0});
                 }
                 if !variant_init_vars.is_empty() {
+                    let vars = if is_object {
+                        fields
+                            .iter()
+                            .map(|f| f.ident.clone().unwrap())
+                            .collect::<Vec<_>>()
+                    } else {
+                        (0..fields.len())
+                            .map(|f| format_ident!("f{f}"))
+                            .collect::<Vec<_>>()
+                    };
+                    let mut from_bytes_var = Vec::new();
+                    for (i, field) in fields.iter().enumerate() {
+                        let ty = &field.ty;
+                        let before = vars[0..i].iter().rev().collect::<Vec<_>>();
+                        from_bytes_var.push(quote! {
+                            if let Some(value) = <#ty>::from_bytes(buffer) {value}else{
+                                #(
+                                    let mut bytes = #before.to_bytes();
+                                    while let Some(byte) = bytes.pop(){
+                                        buffer.insert(0, byte);
+                                    }
+                                )*
+                                let mut bytes = id.to_bytes();
+                                while let Some(byte) = bytes.pop(){
+                                    buffer.insert(0, byte);
+                                }
+
+                                return None;
+                            }
+                        });
+                    }
                     if is_object {
                         variant_from.push(quote! {
-                            #ident{#(#variant_init_vars),*}
+                            {
+                                #(let #vars = #from_bytes_var;)*
+                                return Some(Self::#ident{#(#vars),*})
+                            }
                         });
                     } else {
                         variant_from.push(quote! {
-                            #ident(#(#variant_init_vars),*)
+                            {
+                            #(let #vars = #from_bytes_var;)*
+                            return Some(Self::#ident(#(#vars),*))
+                            }
                         });
                     }
                 } else {
                     variant_from.push(quote! {
-                        #ident
+                        return Some(Self::#ident)
                     });
                 }
             }
 
             quote! {
+                #[allow(clippy::question_mark)]
                 impl #generics TBytes for #ident #generics #gen_where{
                     fn size(&self) -> usize{
-                        match self{
+                        (match self{
                             #(Self::#variants => #variant_size),*
-                        }
+                        } + 0usize.size())
                     }
 
                     fn to_bytes(&self) -> Vec<u8>{
@@ -203,12 +285,18 @@ pub fn derive_bytes(input: TokenStream) -> TokenStream {
                         buffer
                     }
 
-                    fn from_bytes(bytes: &mut TBuffer) -> Option<Self>{
-                        let id = usize::from_bytes(bytes)?;
+                    fn from_bytes(buffer: &mut TBuffer) -> Option<Self>{
+                        let id = usize::from_bytes(buffer)?;
 
                         match id{
-                            #(#idxs => Some(Self::#variant_from),)*
-                            _=> None
+                            #(#idxs => #variant_from,)*
+                            _=> {
+                                let mut bytes = id.to_bytes();
+                                while let Some(byte) = bytes.pop(){
+                                    buffer.insert(0, byte);
+                                }
+                                None
+                            }
                         }
                     }
                 }
